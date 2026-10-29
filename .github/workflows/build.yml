@@ -58,7 +58,9 @@ jobs:
           ios_app='build/DerivedData/Build/Products/Release-iphoneos/WristPane.app'
           test -d "$ios_app"
           find "$ios_app" -type d \( -name 'WristPaneWatch.app' -o -name 'WristPaneWatchWidgets.appex' \) | sort | tee build/logs/embedded-bundles.txt
-          watch_app="$ios_app/Watch/WristPaneWatch.app"
+          # Xcode 26+ embeds single-target watchOS apps as Foundation extensions.
+          # Embedding them in Watch/ instead of PlugIns/ fails validation.
+          watch_app="$ios_app/PlugIns/WristPaneWatch.app"
           widgets="$watch_app/PlugIns/WristPaneWatchWidgets.appex"
           test -d "$watch_app"
           test -d "$widgets"
@@ -74,8 +76,8 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent build/package/Payload build/artifacts/WristPane-unsigned.ipa
           unzip -Z1 build/artifacts/WristPane-unsigned.ipa > build/logs/ipa-entries.txt
           grep -Fxq 'Payload/WristPane.app/Info.plist' build/logs/ipa-entries.txt
-          grep -Fxq 'Payload/WristPane.app/Watch/WristPaneWatch.app/Info.plist' build/logs/ipa-entries.txt
-          grep -Fxq 'Payload/WristPane.app/Watch/WristPaneWatch.app/PlugIns/WristPaneWatchWidgets.appex/Info.plist' build/logs/ipa-entries.txt
+          grep -Fxq 'Payload/WristPane.app/PlugIns/WristPaneWatch.app/Info.plist' build/logs/ipa-entries.txt
+          grep -Fxq 'Payload/WristPane.app/PlugIns/WristPaneWatch.app/PlugIns/WristPaneWatchWidgets.appex/Info.plist' build/logs/ipa-entries.txt
           ditto -c -k --sequesterRsrc --keepParent "$ios_app" build/artifacts/WristPane-unsigned-app.zip
           (cd build/artifacts && shasum -a 256 WristPane-unsigned.ipa WristPane-unsigned-app.zip > SHA256SUMS.txt)
 
