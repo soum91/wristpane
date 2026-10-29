@@ -55,6 +55,11 @@ struct PaneEntry: TimelineEntry {
 }
 
 struct PaneProvider: AppIntentTimelineProvider {
+    func recommendations() -> [AppIntentRecommendation<PaneComplicationIntent>] {
+        // watchOS 26+ lets the person configure each complication directly.
+        []
+    }
+
     func placeholder(in context: Context) -> PaneEntry {
         PaneEntry(date: .now, intent: PaneComplicationIntent(), temperature: 18)
     }
