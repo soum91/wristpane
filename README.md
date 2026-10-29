@@ -34,11 +34,13 @@ The build workflow runs these validations on GitHub's Xcode 27 macOS runner. It 
 
 ```text
 Payload/WristPane.app/
-  Watch/WristPaneWatch.app/
+  PlugIns/WristPaneWatch.app/
     PlugIns/WristPaneWatchWidgets.appex/
 ```
 
 The IPA and the extra app ZIP are **unsigned and not directly installable**. The IPA is intended for local Apple ID provisioning/signing experiments that support Watch companions. The GitHub Actions workflow checks the expected embedded paths before uploading. Version tags publish the IPA, ZIP and SHA-256 checksums to GitHub Releases.
+
+Note the `PlugIns/WristPaneWatch.app` location: Xcode 26+ treats a single-target Watch app as a Foundation extension. The XcodeGen workaround in `project.yml` is required to avoid an Xcode validation failure that occurs when the old `Watch/` directory is used. An experimental Windows sideloader must also recognize this *modern* nesting; the older iLoader proof of concept did not specifically validate this topology.
 
 ## Free Apple ID installation from Windows (experimental)
 
@@ -46,7 +48,7 @@ The IPA and the extra app ZIP are **unsigned and not directly installable**. The
 
 1. Run the **Build WristPane** workflow or open the latest successful GitHub Actions run. Download the artifact and extract `WristPane-unsigned.ipa`. **Do not submit it to FlareStore's normal iPhone-only signer**; the Watch app and widget need their own profiles.
 2. On Windows, install Apple's device connectivity drivers (the iLoader documentation recommends installing [iTunes](https://apple.co/ms)). Connect your paired iPhone by cable, trust the computer, and ensure the Watch is nearby and paired. Enable Developer Mode on the devices if the installation requests it.
-3. Use the *experimental watch-companion branch* of [Rzbck/iloader](https://github.com/Rzbck/iloader/tree/feat/watch-companion-support-20260909), not the ordinary iLoader release, which has not claimed this feature. Its corresponding backend is [Rzbck/isideload](https://github.com/Rzbck/isideload/tree/feat/watch-companion-support-20260909). Check the fork's Windows CI artifact or build the branch using the fork's documented Rust, Bun, and Tauri build steps.
+3. Use the *experimental watch-companion branch* of [Rzbck/iloader](https://github.com/Rzbck/iloader/tree/feat/watch-companion-support-20260909), not the ordinary iLoader release, which has not claimed this feature. Its corresponding backend is [Rzbck/isideload](https://github.com/Rzbck/isideload/tree/feat/watch-companion-support-20260909). The [known-good Windows CI artifact](https://github.com/Rzbck/iloader/actions/runs/34436587217/artifacts/10136476786) was available as of October 29, 2026, or you can build that branch using the fork's documented Rust, Bun, and Tauri steps.
 4. Launch the experimental iLoader locally, sign in with your own Apple Account **inside the app on your own computer**, select **Import IPA**, and select `WristPane-unsigned.ipa`. Let iLoader provision the paired Watch and separately sign the embedded watchOS bundles. Never share your password, pairing records, UDIDs, profiles, or certificates in GitHub issues or logs.
 5. Verify the WristPane iPhone app opens. Then check the iPhone **Watch** app for the companion installation and attempt to open WristPane on the Watch. Add a complication and Smart Stack widget only after the Watch app launches.
 
