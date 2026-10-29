@@ -24,6 +24,9 @@ jobs:
           brew install xcodegen
           xcodegen version
 
+      - name: Check FlareStore source generation
+        run: python3 -m unittest discover -s Tests -p 'test_*.py'
+
       - name: Generate Xcode project
         run: xcodegen generate
 
@@ -38,6 +41,8 @@ jobs:
             -destination 'generic/platform=iOS' \
             -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION="0.1.${GITHUB_RUN_NUMBER}" \
+            CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}" \
             build 2>&1 | tee build/logs/iphone.log | tail -n 120
 
       - name: Compile native watchOS target
@@ -50,6 +55,8 @@ jobs:
             -destination 'generic/platform=watchOS' \
             -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION="0.1.${GITHUB_RUN_NUMBER}" \
+            CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}" \
             build 2>&1 | tee build/logs/watch.log | tail -n 120
 
       - name: Verify embedded Watch and WidgetKit bundles
@@ -104,6 +111,41 @@ jobs:
             build/artifacts/SHA256SUMS.txt \
             --title "WristPane ${GITHUB_REF_NAME} (unsigned)" \
             --notes "Unsigned iPhone + embedded Apple Watch companion IPA for local signing experiments. NOT directly installable: iPhone, Watch, and WidgetKit extension each need appropriate signing and provisioning."
+
+      - name: Prepare FlareStore feed for the completed IPA
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: python3 scripts/update_source.py
+
+      - name: Publish downloadable IPA to GitHub Releases
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: wristpane-build.${{ github.run_number }}
+          name: WristPane 0.1.${{ github.run_number }} (unsigned)
+          prerelease: true
+          make_latest: false
+          fail_on_unmatched_files: true
+          body: |
+            Automatic WristPane development build for iOS 27 and watchOS 27.
+            The IPA includes an iPhone app, embedded Watch companion and Watch widgets.
+            This IPA is UNSIGNED. A FlareStore source is a download catalog, not a
+            guarantee that an iPhone-only certificate can sign or install the Watch app.
+            The iPhone app, Watch app and WidgetKit extension need suitable profiles.
+          files: |
+            build/artifacts/WristPane-unsigned.ipa
+            build/artifacts/WristPane-unsigned-app.zip
+            build/artifacts/SHA256SUMS.txt
+
+      - name: Update source.json after successful GitHub release
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git add source.json
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' \
+                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit -m "Update FlareStore source for WristPane build ${{ github.run_number }} [skip ci]"
+            git push origin HEAD:main
+          fi
 
   # The validated third-party Windows proof of concept recognizes legacy Watch/
   # bundles only. Xcode 27 must embed single-target watchOS apps in PlugIns/.

@@ -1,5 +1,15 @@
 # WristPane
 
+## FlareStore / AltStore source
+
+Add this URL as a repository in FlareStore:
+
+`https://raw.githubusercontent.com/soum91/wristpane/main/source.json`
+
+Each successful `main` build publishes a GitHub prerelease with a direct `WristPane-unsigned.ipa` download, then updates `source.json` with the build number, actual IPA size, and version history. Failed builds are not advertised. The source does not contain signing credentials.
+
+**Important:** FlareStore can download the unsigned iPhone IPA, but a standard iPhone-only certificate does **not** automatically sign or install the embedded Apple Watch companion and its complication extension. Watch deployment still needs separately provisioned watchOS targets and a compatible installer. Use the experimental Windows installer or a properly configured Xcode development setup for full Watch testing.
+
 Native, configurable Apple Watch dashboard with an iPhone companion, watch face complications, Smart Stack widgets, and Control Center controls. The app targets iOS 27 and watchOS 27.
 
 ## What is implemented

@@ -1,0 +1,12 @@
+{
+  "name": "WristPane",
+  "identifier": "com.soum91.wristpane.source",
+  "subtitle": "Apple Watch dashboard and complications",
+  "description": "Development builds of WristPane for iOS 27 and watchOS 27. IPA downloads are unsigned and require appropriate device-specific signing.",
+  "iconURL": "https://github.com/soum91.png",
+  "website": "https://github.com/soum91/wristpane",
+  "sourceURL": "https://raw.githubusercontent.com/soum91/wristpane/main/source.json",
+  "tintColor": "#61B9F7",
+  "apps": [],
+  "news": []
+}
