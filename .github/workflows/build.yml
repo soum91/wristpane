@@ -58,10 +58,26 @@ jobs:
           ios_app='build/DerivedData/Build/Products/Release-iphoneos/WristPane.app'
           test -d "$ios_app"
           find "$ios_app" -type d \( -name 'WristPaneWatch.app' -o -name 'WristPaneWatchWidgets.appex' \) | sort | tee build/logs/embedded-bundles.txt
-          test "$(find "$ios_app" -type d -name 'WristPaneWatch.app' | wc -l | tr -d ' ')" -ge 1
-          test "$(find "$ios_app" -type d -name 'WristPaneWatchWidgets.appex' | wc -l | tr -d ' ')" -ge 1
+          watch_app="$ios_app/Watch/WristPaneWatch.app"
+          widgets="$watch_app/PlugIns/WristPaneWatchWidgets.appex"
+          test -d "$watch_app"
+          test -d "$widgets"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$ios_app/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$watch_app/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$widgets/Info.plist"
+
+          # Windows Apple-ID sideloaders expect an IPA whose root is Payload/.
+          # This is intentionally UNsigned. A local installer must provision and
+          # sign the iPhone app, Watch app, and Watch widget extension separately.
+          mkdir -p build/package/Payload
+          ditto "$ios_app" build/package/Payload/WristPane.app
+          ditto -c -k --sequesterRsrc --keepParent build/package/Payload build/artifacts/WristPane-unsigned.ipa
+          unzip -Z1 build/artifacts/WristPane-unsigned.ipa > build/logs/ipa-entries.txt
+          grep -Fxq 'Payload/WristPane.app/Info.plist' build/logs/ipa-entries.txt
+          grep -Fxq 'Payload/WristPane.app/Watch/WristPaneWatch.app/Info.plist' build/logs/ipa-entries.txt
+          grep -Fxq 'Payload/WristPane.app/Watch/WristPaneWatch.app/PlugIns/WristPaneWatchWidgets.appex/Info.plist' build/logs/ipa-entries.txt
           ditto -c -k --sequesterRsrc --keepParent "$ios_app" build/artifacts/WristPane-unsigned-app.zip
-          shasum -a 256 build/artifacts/WristPane-unsigned-app.zip > build/artifacts/SHA256SUMS.txt
+          (cd build/artifacts && shasum -a 256 WristPane-unsigned.ipa WristPane-unsigned-app.zip > SHA256SUMS.txt)
 
       - name: Upload compilation artifacts and logs
         if: always()
@@ -79,9 +95,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          test -s build/artifacts/WristPane-unsigned-app.zip
+          test -s build/artifacts/WristPane-unsigned.ipa
           gh release create "${GITHUB_REF_NAME}" \
+            build/artifacts/WristPane-unsigned.ipa \
             build/artifacts/WristPane-unsigned-app.zip \
             build/artifacts/SHA256SUMS.txt \
             --title "WristPane ${GITHUB_REF_NAME} (unsigned)" \
-            --notes "Unsigned iPhone + Apple Watch build for verification. NOT installable until every embedded target is properly signed and provisioned."
+            --notes "Unsigned iPhone + embedded Apple Watch companion IPA for local signing experiments. NOT directly installable: iPhone, Watch, and WidgetKit extension each need appropriate signing and provisioning."
