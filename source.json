@@ -7,6 +7,33 @@
   "website": "https://github.com/soum91/wristpane",
   "sourceURL": "https://raw.githubusercontent.com/soum91/wristpane/main/source.json",
   "tintColor": "#61B9F7",
-  "apps": [],
+  "apps": [
+    {
+      "name": "WristPane",
+      "bundleIdentifier": "com.soum91.wristpane",
+      "developerName": "soum91",
+      "iconURL": "https://github.com/soum91.png",
+      "tintColor": "#61B9F7",
+      "category": "utilities",
+      "versions": [
+        {
+          "version": "0.1.10",
+          "buildVersion": "10",
+          "date": "2026-10-29",
+          "localizedDescription": "Unsigned WristPane iPhone IPA with an embedded Apple Watch app and complications. This feed provides downloads, not Watch installation: the iPhone app, Watch app, and Watch widget extension require separate appropriate provisioning and signing. Normal iPhone-only FlareStore certificates cannot install the Watch companion.",
+          "downloadURL": "https://github.com/soum91/wristpane/releases/download/wristpane-build.10/WristPane-unsigned.ipa",
+          "size": 176022,
+          "minOSVersion": "27.0"
+        }
+      ],
+      "subtitle": "Customizable Apple Watch dashboard",
+      "localizedDescription": "Unsigned WristPane iPhone IPA with an embedded Apple Watch app and complications. This feed provides downloads, not Watch installation: the iPhone app, Watch app, and Watch widget extension require separate appropriate provisioning and signing. Normal iPhone-only FlareStore certificates cannot install the Watch companion.",
+      "version": "0.1.10",
+      "versionDate": "2026-10-29",
+      "versionDescription": "Unsigned WristPane iPhone IPA with an embedded Apple Watch app and complications. This feed provides downloads, not Watch installation: the iPhone app, Watch app, and Watch widget extension require separate appropriate provisioning and signing. Normal iPhone-only FlareStore certificates cannot install the Watch companion.",
+      "downloadURL": "https://github.com/soum91/wristpane/releases/download/wristpane-build.10/WristPane-unsigned.ipa",
+      "size": 176022
+    }
+  ],
   "news": []
 }
