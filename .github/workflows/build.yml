@@ -1,0 +1,87 @@
+name: Build WristPane
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Select Xcode and install XcodeGen
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+          xcodegen version
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Compile iPhone app and embedded Watch app
+        run: |
+          set -o pipefail
+          mkdir -p build/logs build/artifacts
+          xcodebuild \
+            -project WristPane.xcodeproj \
+            -scheme WristPane \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee build/logs/iphone.log | tail -n 120
+
+      - name: Compile native watchOS target
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project WristPane.xcodeproj \
+            -scheme WristPaneWatch \
+            -configuration Release \
+            -destination 'generic/platform=watchOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee build/logs/watch.log | tail -n 120
+
+      - name: Verify embedded Watch and WidgetKit bundles
+        run: |
+          set -euo pipefail
+          ios_app='build/DerivedData/Build/Products/Release-iphoneos/WristPane.app'
+          test -d "$ios_app"
+          find "$ios_app" -type d \( -name 'WristPaneWatch.app' -o -name 'WristPaneWatchWidgets.appex' \) | sort | tee build/logs/embedded-bundles.txt
+          test "$(find "$ios_app" -type d -name 'WristPaneWatch.app' | wc -l | tr -d ' ')" -ge 1
+          test "$(find "$ios_app" -type d -name 'WristPaneWatchWidgets.appex' | wc -l | tr -d ' ')" -ge 1
+          ditto -c -k --sequesterRsrc --keepParent "$ios_app" build/artifacts/WristPane-unsigned-app.zip
+          shasum -a 256 build/artifacts/WristPane-unsigned-app.zip > build/artifacts/SHA256SUMS.txt
+
+      - name: Upload compilation artifacts and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WristPane-unsigned-${{ github.run_number }}
+          path: |
+            build/artifacts/
+            build/logs/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Publish unsigned archive on version tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -s build/artifacts/WristPane-unsigned-app.zip
+          gh release create "${GITHUB_REF_NAME}" \
+            build/artifacts/WristPane-unsigned-app.zip \
+            build/artifacts/SHA256SUMS.txt \
+            --title "WristPane ${GITHUB_REF_NAME} (unsigned)" \
+            --notes "Unsigned iPhone + Apple Watch build for verification. NOT installable until every embedded target is properly signed and provisioned."

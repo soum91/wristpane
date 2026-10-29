@@ -1,0 +1,80 @@
+name: WristPane
+options:
+  bundleIdPrefix: com.soum91
+  deploymentTarget:
+    iOS: "27.0"
+    watchOS: "27.0"
+  xcodeVersion: "27.0"
+  projectFormat: xcode27_0
+  postGenCommand: >-
+    sed -i ''
+    -e 's|dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";|dstPath = "";|'
+    -e 's|dstSubfolderSpec = 16;|dstSubfolderSpec = 13;|'
+    WristPane.xcodeproj/project.pbxproj
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: YES
+targets:
+  WristPane:
+    type: application
+    platform: iOS
+    sources:
+      - Sources/Shared
+      - Sources/iOS
+    info:
+      path: Config/iOS-Info.plist
+      properties:
+        CFBundleDisplayName: WristPane
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.soum91.wristpane
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+    dependencies:
+      - target: WristPaneWatch
+        embed: true
+    scheme: {}
+  WristPaneWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - Sources/Shared
+      - Sources/Watch
+    info:
+      path: Config/Watch-Info.plist
+      properties:
+        CFBundleDisplayName: WristPane
+        WKCompanionAppBundleIdentifier: com.soum91.wristpane
+        WKRunsIndependentlyOfCompanionApp: true
+        WKWatchKitApp: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.soum91.wristpane.watchkitapp
+        TARGETED_DEVICE_FAMILY: "4"
+    dependencies:
+      - target: WristPaneWatchWidgets
+        embed: true
+    scheme: {}
+  WristPaneWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - Sources/Shared
+      - Sources/WatchWidgets
+    info:
+      path: Config/WatchWidgets-Info.plist
+      properties:
+        CFBundleDisplayName: WristPane Widgets
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.soum91.wristpane.watchkitapp.widgets
+        TARGETED_DEVICE_FAMILY: "4"
