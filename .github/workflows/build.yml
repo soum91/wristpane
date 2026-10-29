@@ -104,3 +104,100 @@ jobs:
             build/artifacts/SHA256SUMS.txt \
             --title "WristPane ${GITHUB_REF_NAME} (unsigned)" \
             --notes "Unsigned iPhone + embedded Apple Watch companion IPA for local signing experiments. NOT directly installable: iPhone, Watch, and WidgetKit extension each need appropriate signing and provisioning."
+
+  # The validated third-party Windows proof of concept recognizes legacy Watch/
+  # bundles only. Xcode 27 must embed single-target watchOS apps in PlugIns/.
+  # Build a local-use installer with both layouts supported, without committing
+  # or sending any signing credentials to GitHub. Device installation is UNTESTED.
+  build-windows-watch-installer:
+    name: Experimental Windows Watch installer
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    timeout-minutes: 100
+    permissions:
+      contents: read
+    steps:
+      - name: Check out physically tested iLoader revision
+        uses: actions/checkout@v4
+        with:
+          repository: Rzbck/iloader
+          ref: 70f37e9b4afc659ab44ec1944c034093f4cda416
+          path: installer/iloader
+          persist-credentials: false
+
+      - name: Check out matching isideload backend
+        uses: actions/checkout@v4
+        with:
+          repository: Rzbck/isideload
+          ref: f7b9f3da570edd6824c29680545e710846d07df5
+          path: installer/isideload
+          persist-credentials: false
+
+      - name: Teach the backend to recognize modern PlugIns Watch companions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          bundle = Path('installer/isideload/isideload/src/sideload/bundle.rs')
+          source = bundle.read_text(encoding='utf-8')
+          anchor = '        let libraries = find_dylibs(&bundle_path, &bundle_path)?;'
+          assert source.count(anchor) == 1, 'Upstream backend changed; review the patch'
+          replacement = '''        // Xcode 26+ embeds single-target Watch apps as Foundation extensions in
+                  // PlugIns/, while older projects use Watch/. Keep both paths.
+                  let mut app_extensions = app_extensions;
+                  let mut watch_apps = watch_apps;
+                  app_extensions.retain(|child| {
+                      if child.bundle_dir.extension().is_some_and(|ext| ext == "app")
+                          && child.app_info.contains_key("WKCompanionAppBundleIdentifier")
+                      {
+                          watch_apps.push(child.clone());
+                          false
+                      } else {
+                          true
+                      }
+                  });
+
+          '''
+          source = source.replace(anchor, replacement + anchor)
+          bundle.write_text(source, encoding='utf-8')
+
+          manifest = Path('installer/iloader/src-tauri/Cargo.toml')
+          text = manifest.read_text(encoding='utf-8')
+          before = [line for line in text.splitlines() if line.startswith('isideload = ')]
+          assert len(before) == 1, 'Expected one isideload dependency'
+          text = text.replace(before[0], 'isideload = { path = "../../isideload/isideload", features = ["fs-storage"] }')
+          manifest.write_text(text, encoding='utf-8')
+          print('Applied PlugIns Watch recognition and local isideload dependency')
+          PY
+
+      - name: Configure Windows Rust and WebView toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add MSVC compiler
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Perl and Make
+        run: choco install strawberryperl make --no-progress
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install frontend dependencies
+        working-directory: installer/iloader
+        run: bun i --frozen-lockfile
+
+      - name: Build unsigned Windows installer
+        working-directory: installer/iloader
+        run: bun tauri build --config src-tauri/ci.conf.json --bundles nsis
+
+      - name: Upload local-use experimental installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: WristPane-Windows-Watch-Installer-${{ github.run_number }}
+          path: installer/iloader/src-tauri/target/release/bundle/nsis/*.exe
+          retention-days: 30
+          if-no-files-found: error
