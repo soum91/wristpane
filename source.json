@@ -17,6 +17,15 @@
       "category": "utilities",
       "versions": [
         {
+          "version": "0.1.12",
+          "buildVersion": "12",
+          "date": "2026-10-30",
+          "localizedDescription": "Unsigned WristPane iPhone IPA with an embedded Apple Watch app and complications. This feed provides downloads, not Watch installation: the iPhone app, Watch app, and Watch widget extension require separate appropriate provisioning and signing. Normal iPhone-only FlareStore certificates cannot install the Watch companion.",
+          "downloadURL": "https://github.com/soum91/wristpane/releases/download/wristpane-build.12/WristPane-unsigned.ipa",
+          "size": 560502,
+          "minOSVersion": "27.0"
+        },
+        {
           "version": "0.1.10",
           "buildVersion": "10",
           "date": "2026-10-29",
@@ -28,11 +37,11 @@
       ],
       "subtitle": "Customizable Apple Watch dashboard",
       "localizedDescription": "Unsigned WristPane iPhone IPA with an embedded Apple Watch app and complications. This feed provides downloads, not Watch installation: the iPhone app, Watch app, and Watch widget extension require separate appropriate provisioning and signing. Normal iPhone-only FlareStore certificates cannot install the Watch companion.",
-      "version": "0.1.10",
-      "versionDate": "2026-10-29",
+      "version": "0.1.12",
+      "versionDate": "2026-10-30",
       "versionDescription": "Unsigned WristPane iPhone IPA with an embedded Apple Watch app and complications. This feed provides downloads, not Watch installation: the iPhone app, Watch app, and Watch widget extension require separate appropriate provisioning and signing. Normal iPhone-only FlareStore certificates cannot install the Watch companion.",
-      "downloadURL": "https://github.com/soum91/wristpane/releases/download/wristpane-build.10/WristPane-unsigned.ipa",
-      "size": 176022
+      "downloadURL": "https://github.com/soum91/wristpane/releases/download/wristpane-build.12/WristPane-unsigned.ipa",
+      "size": 560502
     }
   ],
   "news": []
