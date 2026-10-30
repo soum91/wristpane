@@ -24,7 +24,12 @@ class WristPaneFeedTests(unittest.TestCase):
         self.assertIn("Watch widget", app["localizedDescription"])
 
     def test_same_build_is_idempotent_and_latest_stays_first(self):
-        first = update_feed(copy.deepcopy(self.feed), build=42, size=1350000, date="2026-10-29", repository="soum91/wristpane")
+        # The live feed accumulates published versions after every CI build.
+        # Test idempotency against a fresh history instead of assuming the
+        # committed source.json has no previously published entries.
+        empty_feed = copy.deepcopy(self.feed)
+        empty_feed["apps"][0]["versions"] = []
+        first = update_feed(empty_feed, build=42, size=1350000, date="2026-10-29", repository="soum91/wristpane")
         second = update_feed(first, build=42, size=1350000, date="2026-10-29", repository="soum91/wristpane")
         third = update_feed(second, build=43, size=1351000, date="2026-10-29", repository="soum91/wristpane")
         self.assertEqual(len(third["apps"][0]["versions"]), 2)
