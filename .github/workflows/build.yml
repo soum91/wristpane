@@ -71,6 +71,10 @@ jobs:
           widgets="$watch_app/PlugIns/WristPaneWatchWidgets.appex"
           test -d "$watch_app"
           test -d "$widgets"
+          # Both apps must compile their own named AppIcon asset catalog.
+          # A successful Swift compilation alone does not catch missing icons.
+          test -s "$ios_app/Assets.car"
+          test -s "$watch_app/Assets.car"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$ios_app/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$watch_app/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$widgets/Info.plist"
