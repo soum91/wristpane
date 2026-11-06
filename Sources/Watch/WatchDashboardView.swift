@@ -38,6 +38,10 @@ struct WatchDashboardView: View {
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"))")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 6)
         }
