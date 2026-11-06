@@ -69,6 +69,9 @@ struct PhoneSettingsView: View {
                     Label("Pin the WristPane widget in Smart Stack", systemImage: "square.stack")
                     Label("Add Open WristPane to Control Center", systemImage: "switch.2")
                 }
+                Section("About") {
+                    LabeledContent("Installed version", value: "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"))")
+                }
             }
             .navigationTitle("WristPane")
             .toolbarBackground(.visible, for: .navigationBar)
