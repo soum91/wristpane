@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "targets": [
+    {
+      "name": "iPhone app",
+      "evidence": [
+        {
+          "path": "Sources/iOS/PhoneSettingsView.swift",
+          "contains": [
+            "Installed version",
+            "CFBundleShortVersionString",
+            "CFBundleVersion"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "watchOS app",
+      "evidence": [
+        {
+          "path": "Sources/Watch/WatchDashboardView.swift",
+          "contains": [
+            "Text(\"v",
+            "CFBundleShortVersionString",
+            "CFBundleVersion"
+          ]
+        }
+      ]
+    }
+  ]
+}
