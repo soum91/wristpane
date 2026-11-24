@@ -8,49 +8,56 @@ struct WatchDashboardView: View {
     @State private var weatherError = false
     @State private var batteryLevel: Float = -1
     @AppStorage("flowLiquidMotion") private var flowLiquidMotion = true
+    @State private var showControls = false
 
     private let columns = [GridItem(.flexible(), spacing: 7), GridItem(.flexible(), spacing: 7)]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                FlowFusionWatchFace(temperature: temperature, batteryLevel: batteryLevel, motionEnabled: flowLiquidMotion)
-                    .accessibilityLabel("Flow Fusion watch dashboard with live time, battery, workout shortcut symbol and temperature")
-
-                HStack {
+        FlowFusionWatchFace(
+            temperature: temperature,
+            batteryLevel: batteryLevel,
+            motionEnabled: flowLiquidMotion
+        )
+        .ignoresSafeArea()
+        .persistentSystemOverlays(.hidden)
+        .toolbarVisibility(.hidden, for: .statusBar)
+        .accessibilityLabel("Flow Fusion face with live time, battery, workout shortcut and temperature")
+        .onLongPressGesture(minimumDuration: 0.7) {
+            showControls = true
+        }
+        .sheet(isPresented: $showControls) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("WristPane")
                         .font(.headline)
-                    Spacer(minLength: 4)
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(.cyan)
-                }
 
-                HStack(spacing: 5) {
-                    Image(systemName: "location.fill")
-                    Text(city.title)
-                }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                    Toggle("Animate Flow background", isOn: $flowLiquidMotion)
 
-                LazyVGrid(columns: columns, spacing: 7) {
-                    ForEach(Array(panes.enumerated()), id: \.offset) { _, pane in
-                        paneTile(pane)
+                    HStack(spacing: 5) {
+                        Image(systemName: "location.fill")
+                        Text(city.title)
                     }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                    LazyVGrid(columns: columns, spacing: 7) {
+                        ForEach(Array(panes.enumerated()), id: \.offset) { _, pane in
+                            paneTile(pane)
+                        }
+                    }
+
+                    Text("Edit tiles in the WristPane iPhone app")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+
+                    Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"))")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
                 }
-
-                Toggle("Animate Flow background", isOn: $flowLiquidMotion)
-                    .font(.system(size: 11))
-
-                Text("Edit tiles in the WristPane iPhone app")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"))")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
+                .padding(.horizontal, 8)
             }
-            .padding(.horizontal, 6)
         }
         .task {
             loadSavedSettings()
@@ -222,7 +229,7 @@ private struct FlowFusionWatchFace: View {
                     .strokeBorder(.white.opacity(0.27), lineWidth: 0.7)
             }
         }
-        .frame(height: 200)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .combine)
     }
 
